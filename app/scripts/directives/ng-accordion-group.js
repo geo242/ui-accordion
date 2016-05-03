@@ -16,18 +16,26 @@ angular.module('uiAccordion')
               options: '=?'
           },
           link: function (scope, element, attrs, controllers) {
-              var accordionCtrl, controller, accordion, _accordionGroup;
+              var accordionCtrl, controller, accordion, _accordionGroup, _defaultOptions;
               controller = controllers[1];
               accordionCtrl = controllers[0];
               accordion = accordionCtrl.accordion;
               _accordionGroup = accordionGroup.createAccordionGrp();
-              if (!scope.options) {
-                  scope.options = accordionGroup.defaultAccordionGroupOptions();
-              }
-              _accordionGroup.options = angular.extend(accordionGroup.defaultAccordionGroupOptions(), scope.options);
+              _defaultOptions = accordionGroup.defaultAccordionGroupOptions();
+              scope.options = scope.options || {};
 
-              scope.$watchCollection('options', function (n) {
-                  _accordionGroup.options = angular.extend(accordionGroup.defaultAccordionGroupOptions(), n);
+              function safeExtend(target, source) {
+                  var sourceKeys = Object.keys(source);
+                  for (var i = 0; i < sourceKeys.length; i++) {
+                      target[sourceKeys[i]] = target[sourceKeys[i]] || _defaultOptions[sourceKeys[i]];
+                  }
+              }
+
+              safeExtend(scope.options, _defaultOptions);
+              _accordionGroup.options = scope.options;
+
+              scope.$watch('options', function (n) {
+                  safeExtend(_accordionGroup.options, n);
                   if (n && !n.disabled) {
                       accordion.applyState(_accordionGroup);
                   }
